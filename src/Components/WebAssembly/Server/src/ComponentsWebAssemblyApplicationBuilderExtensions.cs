@@ -23,12 +23,13 @@ namespace Microsoft.AspNetCore.Builder
     {
         private static readonly HashSet<StringSegment> _supportedEncodings = new HashSet<StringSegment>(StringSegmentComparer.OrdinalIgnoreCase)
         {
-            "gzip"
+            "gzip",
+            "br"
         };
 
         // List of encodings by preference order with their associated extension so that we can easily handle "*".
         private static readonly List<(StringSegment encoding, string extension)> _preferredEncodings =
-            new List<(StringSegment encoding, string extension)>() { ("gzip", ".gz") };
+            new List<(StringSegment encoding, string extension)>() { ("br", ".br"), ("gzip", ".gz") };
 
         /// <summary>
         /// Configures the application to serve Blazor WebAssembly framework files from the path <paramref name="pathPrefix"/>. This path must correspond to a referenced Blazor WebAssembly application project.
@@ -84,6 +85,7 @@ namespace Microsoft.AspNetCore.Builder
             // We unconditionally map pdbs as there will be no pdbs in the output folder for
             // release builds unless BlazorEnableDebugging is explicitly set to true.
             AddMapping(contentTypeProvider, ".pdb", MediaTypeNames.Application.Octet);
+            AddMapping(contentTypeProvider, ".br", MediaTypeNames.Application.Octet);
 
             options.ContentTypeProvider = contentTypeProvider;
 
@@ -96,11 +98,12 @@ namespace Microsoft.AspNetCore.Builder
                 fileContext.Context.Response.Headers.Append(HeaderNames.CacheControl, "no-cache");
 
                 var requestPath = fileContext.Context.Request.Path;
-                if (string.Equals(Path.GetExtension(requestPath.Value), ".gz"))
+                var fileExtension = Path.GetExtension(requestPath.Value);
+                if (string.Equals(fileExtension, ".gz") || string.Equals(fileExtension, ".br"))
                 {
                     // When we are serving framework files (under _framework/ we perform content negotiation
-                    // on the accept encoding and replace the path with <<original>>.gz if we can serve gzip
-                    // content.
+                    // on the accept encoding and replace the path with <<original>>.gz|br if we can serve gzip or brotli content
+                    // respectively.
                     // Here we simply calculate the original content type by removing the extension and apply it
                     // again.
                     // When we revisit this, we should consider calculating the original content type and storing it
@@ -150,8 +153,27 @@ namespace Microsoft.AspNetCore.Builder
                     continue;
                 }
 
-                if (quality <= selectedEncodingQuality)
+                if (quality < selectedEncodingQuality)
                 {
+                    continue;
+                }
+
+                if (quality == selectedEncodingQuality)
+                {
+                    foreach (var preferredEncoding in _preferredEncodings)
+                    {
+                        if (preferredEncoding.encoding == selectedEncoding)
+                        {
+                            break;
+                        }
+
+                        if (preferredEncoding.encoding == encoding.Value)
+                        {
+                            selectedEncoding = encoding.Value;
+                            break;
+                        }
+                    }
+
                     continue;
                 }
 
@@ -189,6 +211,17 @@ namespace Microsoft.AspNetCore.Builder
                     // We only try to serve the pre-compressed file if it's actually there.
                     context.Request.Path = context.Request.Path + ".gz";
                     context.Response.Headers[HeaderNames.ContentEncoding] = "gzip";
+                    context.Response.Headers.Append(HeaderNames.Vary, HeaderNames.ContentEncoding);
+                }
+            }
+
+            if (StringSegment.Equals("br", selectedEncoding, StringComparison.OrdinalIgnoreCase))
+            {
+                if (ResourceExists(context, webHost, ".br"))
+                {
+                    // We only try to serve the pre-compressed file if it's actually there.
+                    context.Request.Path = context.Request.Path + ".br";
+                    context.Response.Headers[HeaderNames.ContentEncoding] = "br";
                     context.Response.Headers.Append(HeaderNames.Vary, HeaderNames.ContentEncoding);
                 }
             }

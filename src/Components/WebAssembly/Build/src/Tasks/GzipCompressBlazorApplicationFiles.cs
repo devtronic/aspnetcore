@@ -8,7 +8,7 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.AspNetCore.Components.WebAssembly.Build
 {
-    public class CompressBlazorApplicationFiles : Task
+    public class GzipCompressBlazorApplicationFiles : Task
     {
         [Required]
         public ITaskItem StaticWebAsset { get; set; }

@@ -2,13 +2,15 @@
 
   <Target Name="_ResolveBlazorGeneratedAssets" DependsOnTargets="_PrepareBlazorOutputs">
     <ItemGroup>
-      <StaticWebAsset Include="@(_BlazorOutputWithTargetPath->'%(FullPath)')" RemoveMetadata="TargetOutputPath">
+      <_BlazorOutputCandidateAsset Include="@(_BlazorOutputWithTargetPath->'%(FullPath)')">
         <SourceType></SourceType>
         <SourceId>$(PackageId)</SourceId>
         <ContentRoot>$([MSBuild]::NormalizeDirectory('$(TargetDir)wwwroot\'))</ContentRoot>
         <BasePath>$(StaticWebAssetBasePath)</BasePath>
         <RelativePath>$([System.String]::Copy('%(_BlazorOutputWithTargetPath.TargetOutputPath)').Replace('\','/'))</RelativePath>
-      </StaticWebAsset>
+      </_BlazorOutputCandidateAsset>
+
+      <StaticWebAsset Include="@(_BlazorOutputCandidateAsset)" KeepMetadata="SourceType;SourceId;ContentRoot;BasePath;RelativePath" />
 
       <StaticWebAsset Remove="@(StaticWebAsset)" Condition="'$(BlazorEnableDebugging)' != 'true' and '%(SourceType)' == '' and '%(Extension)' == '.pdb'" />
 
@@ -44,7 +46,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <_BlazorCopyLocalAssets Include="@(StaticWebAsset)" Condition="'%(SourceType)' == '' and '%(ContentRoot)' != '$(_BlazorCurrentProjectWWWroot)'" />
+      <_BlazorCopyLocalAssets
+        Include="@(StaticWebAsset)"
+        Condition="'%(SourceType)' == '' and '%(ContentRoot)' != '$(_BlazorCurrentProjectWWWroot)' and !$([System.String]::Copy('%(RelativePath)').EndsWith('.br'))" />
     </ItemGroup>
 
     <!-- Copy the blazor output files  -->
