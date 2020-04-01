@@ -31,15 +31,6 @@
 
   </Target>
 
-  <Target Name="_FixUpManifestCompression"
-
-    AfterTargets="_ResolveBlazorFilesToCompress">
-    <ItemGroup>
-      <_BrotliFileToCompress Remove="@(_BrotliFileToCompress)" Condition="'%(InputSource)' == ''" />
-      <_GzipFileToCompress Remove="@(_BrotliFileToCompress)" Condition="'%(InputSource)' == ''" />
-    </ItemGroup>
-  </Target>
-
   <UsingTask TaskName="GenerateServiceWorkerAssetsManifest" AssemblyFile="$(_BlazorTasksPath)" />
 
   <Target Name="_WriteServiceWorkerAssetsManifest"
@@ -129,8 +120,22 @@
   <Target Name="_ResolveServiceWorkerOutputs"
           BeforeTargets="_ResolveBlazorOutputs"
           DependsOnTargets="_ComputeServiceWorkerOutputs">
+
     <ItemGroup>
-      <_BlazorOutputWithTargetPath Include="@(_ServiceWorkerIntermediateFile)" />
+      <_BlazorFileCompressExclusion Include="@(_ServiceWorkerIntermediateFile->'%(FullPath)')" />
+      <_BlazorCopyLocalExclusion Include="@(_ServiceWorkerIntermediateFile->'%(FullPath)')" />
+
+      <_BlazorOutputWithTargetPath Include="@(_ServiceWorkerIntermediateFile->'%(FullPath)')" />
+      <_ServiceWorkerStaticWebAsset Include="@(_ServiceWorkerIntermediateFile->'%(FullPath)')">
+        <SourceType></SourceType>
+        <SourceId>$(PackageId)</SourceId>
+        <ContentRoot>$([MSBuild]::NormalizeDirectory('$(TargetDir)wwwroot\'))</ContentRoot>
+        <BasePath>$(StaticWebAssetBasePath)</BasePath>
+        <RelativePath>$([MSBuild]::MakeRelative($([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/$(_BlazorIntermediateOutputPath)')), $(_ServiceWorkerAssetsManifestFullPath)))</RelativePath>
+      </_ServiceWorkerStaticWebAsset>
+
+      <StaticWebAsset Include="@(_ServiceWorkerStaticWebAsset)" />
+
     </ItemGroup>
   </Target>
 

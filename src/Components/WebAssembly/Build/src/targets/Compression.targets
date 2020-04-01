@@ -35,15 +35,18 @@
         <TargetOutputPath>%(RelativePath).gz</TargetOutputPath>
         <RelativePath>%(RelativePath).gz</RelativePath>
       </_GzipBlazorFileToCompress>
+      <_GzipBlazorFileToCompress Remove="@(_BlazorFileCompressExclusion)" />
 
       <_BrotliBlazorFileToCompress Include="@(_CompressionCandidateWithIntegrity)">
         <TargetCompressionPath>$(_BlazorFilesIntermediateOutputPath)%(RelativePath).br</TargetCompressionPath>
         <TargetOutputPath>%(RelativePath).br</TargetOutputPath>
         <RelativePath>%(RelativePath).br</RelativePath>
       </_BrotliBlazorFileToCompress>
+      <_BrotliBlazorFileToCompress Remove="@(_BlazorFileCompressExclusion)" />
 
       <_BlazorFileToCompress Include="@(_GzipBlazorFileToCompress)" />
       <_BlazorFileToCompress Include="@(_BrotliBlazorFileToCompress)" />
+      <_BlazorFileToCompress Remove="@(_BlazorFileCompressExclusion)" />
 
       <_CompressedStaticWebAsset Include="@(_BlazorFileToCompress->'%(TargetCompressionPath)')" RemoveMetadata="TargetOutputPath;TargetCompressionPath" />
 
