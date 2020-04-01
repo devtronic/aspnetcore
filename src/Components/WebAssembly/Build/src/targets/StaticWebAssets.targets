@@ -41,7 +41,7 @@
 
   </Target>
 
-  <Target Name="_BlazorComputeWebRootIntegrity">
+  <Target Name="_BlazorComputeWebRootIntegrity" Condition="'$(ServiceWorkerAssetsManifest)' != ''">
     <ItemGroup>
       <_StaticWebAssetsWithoutHash Include="@(StaticWebAsset)" />
       <_StaticWebAssetsWithoutHash Remove="@(_StaticWebAssetIntegrity)" />
