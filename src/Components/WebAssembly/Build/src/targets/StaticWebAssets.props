@@ -3,12 +3,14 @@
     <ResolveStaticWebAssetsInputsDependsOn>
       $(ResolveStaticWebAssetsInputsDependsOn);
       _BlazorApplyLinkPreferencesToStaticWebAssets;
+      _BlazorComputeWebRootIntegrity;
       _ResolveBlazorGeneratedAssets;
     </ResolveStaticWebAssetsInputsDependsOn>
 
     <GetCurrentProjectStaticWebAssetsDependsOn>
       $(GetCurrentProjectStaticWebAssetsDependsOn);
       _BlazorApplyLinkPreferencesToStaticWebAssets;
+      _BlazorComputeWebRootIntegrity;
       _ResolveBlazorGeneratedAssets;
     </GetCurrentProjectStaticWebAssetsDependsOn>
   </PropertyGroup>

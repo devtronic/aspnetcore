@@ -6,7 +6,7 @@
 
   <Target
     Name="_PrepareBlazorOutputs"
-    DependsOnTargets="_ResolveBlazorInputs;_ResolveBlazorOutputs;_GenerateBlazorBootJson">
+    DependsOnTargets="_ResolveBlazorInputs;_ResolveBlazorOutputs;_GenerateBlazorBootJson;_GenerateBlazorBootJsonIntegrity">
   </Target>
 
   <Target Name="_ResolveBlazorInputs" DependsOnTargets="ResolveReferences;ResolveRuntimePackAssets">
@@ -144,7 +144,7 @@
     <ItemGroup Condition="'$(BlazorEnableDebugging)' != 'true'">
       <_BlazorOutputWithTargetPath Remove="@(_BlazorOutputWithTargetPath)" Condition="'%(Extension)' == '.pdb'" />
     </ItemGroup>
-    <GetFileHash Files="@(_BlazorOutputWithTargetPath)" Algorithm="SHA256" HashEncoding="base64">
+    <GetFileHash Files="@(_BlazorOutputWithTargetPath)" Condition="Exists(%(Identity))" Algorithm="SHA256" HashEncoding="base64">
       <Output TaskParameter="Items" ItemName="_BlazorOutputWithHash" />
     </GetFileHash>
 
@@ -365,12 +365,16 @@
 
     <GenerateBlazorBootJson
       AssemblyPath="@(IntermediateAssembly)"
-      Resources="@(_BlazorBootResourceWithHash)"
+      Resources="@(_BlazorBootResource)"
       DebugBuild="$(_IsDebugBuild)"
       LinkerEnabled="$(BlazorWebAssemblyEnableLinking)"
       CacheBootResources="$(BlazorCacheBootResources)"
       OutputPath="$(_BlazorBootJsonIntermediateOutputPath)"
       ConfigurationFiles="@(_BlazorConfigFile)" />
+
+  </Target>
+
+  <Target Name="_GenerateBlazorBootJsonIntegrity">
 
     <GetFileHash Files="$(_BlazorBootJsonIntermediateOutputPath)" Algorithm="SHA256" HashEncoding="base64">
       <Output TaskParameter="Items" ItemName="_BlazorBootJsonWithHash" />
@@ -388,11 +392,11 @@
       </_BlazorOutputWithTargetPath>
 
       <FileWrites Include="$(_BlazorBootJsonIntermediateOutputPath)" />
-      <FileWrites Include="%(_BlazorOutputWithTargetPath.IntegrityFile)" />
+      <FileWrites Include="%(_BlazorBootJsonWithIntegrity.IntegrityFile)" />
 
     </ItemGroup>
 
-    <WriteLinesToFile Lines="%(_BlazorOutputWithTargetPath.Integrity)" File="%(_BlazorOutputWithTargetPath.IntegrityFile)" WriteOnlyWhenDifferent="true" Overwrite="true" />
+    <WriteLinesToFile Lines="%(_BlazorBootJsonWithIntegrity.Integrity)" File="%(_BlazorBootJsonWithIntegrity.IntegrityFile)" WriteOnlyWhenDifferent="true" Overwrite="true" />
 
   </Target>
 

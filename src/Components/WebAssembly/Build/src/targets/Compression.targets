@@ -5,8 +5,7 @@
 
     <ResolveCurrentProjectStaticWebAssetsDependsOn>
       $(ResolveCurrentProjectStaticWebAssetsDependsOn);
-      _GzipCompressBlazorApplicationFiles;
-      _BrotliCompressBlazorApplicationFiles;
+      _ResolveBlazorFilesToCompress;
     </ResolveCurrentProjectStaticWebAssetsDependsOn>
 
   </PropertyGroup>
@@ -60,7 +59,8 @@
 
   <Target
     Name="_GzipCompressBlazorApplicationFiles"
-    AfterTargets="_ResolveBlazorFilesToCompress"
+    DependsOnTargets="_ResolveBlazorFilesToCompress"
+    BeforeTargets="_BlazorStaticWebAssetsCopyGeneratedFilesToOutputDirectory"
     Inputs="%(_GzipBlazorFileToCompress.InputSource)"
     Outputs="%(_GzipBlazorFileToCompress.TargetCompressionPath)">
 
@@ -70,7 +70,8 @@
 
   <Target
     Name="_BrotliCompressBlazorApplicationFiles"
-    BeforeTargets="GetCopyToPublishDirectoryItems"
+    BeforeTargets="GetCopyToPublishDirectoryItems;_CopyResolvedFilesToPublishPreserveNewest"
+    DependsOnTargets="_ResolveBlazorFilesToCompress"
     Inputs="%(_BrotliBlazorFileToCompress.InputSource)"
     Outputs="%(_BrotliBlazorFileToCompress.TargetCompressionPath)">
 

@@ -15,7 +15,7 @@
   <Import Project="Blazor.MonoRuntime.targets" />
   <Import Project="Publish.targets" />
   <Import Project="StaticWebAssets.targets" />
-  <Import Project="ServiceWorkerAssetsManifest.targets" />
+  <Import Project="ServiceWorkerAssetsManifest.targets" Condition="'$(ServiceWorkerAssetsManifest)' != ''" />
   <Import Project="Compression.targets" Condition="'$(BlazorEnableCompression)' == 'true'" />
 
 </Project>

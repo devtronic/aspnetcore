@@ -21,7 +21,7 @@ namespace Microsoft.AspNetCore.Components.WebAssembly.Build.BrotliCompression
 
             using var sourceStream = File.OpenRead(args[0]);
             using var fileStream = new FileStream(args[1], FileMode.Create);
-            using var stream = new BrotliStream(fileStream, CompressionLevel.Optimal);
+            using var stream = new BrotliStream(fileStream, CompressionLevel.Fastest);
 
             await sourceStream.CopyToAsync(stream);
 
