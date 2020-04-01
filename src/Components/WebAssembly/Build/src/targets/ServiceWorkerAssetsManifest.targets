@@ -109,7 +109,7 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="_OmitServiceWorkerContent" BeforeTargets="AssignTargetPaths; ResolveCurrentProjectStaticWebAssetsInputs">
+  <Target Name="_OmitServiceWorkerContent" BeforeTargets="AssignTargetPaths">
     <ItemGroup>
       <!-- Don't emit the service worker source files to the output -->
       <Content Remove="@(ServiceWorker)" />
@@ -123,15 +123,13 @@
 
     <ItemGroup>
       <_BlazorFileCompressExclusion Include="@(_ServiceWorkerIntermediateFile->'%(FullPath)')" />
-      <_BlazorCopyLocalExclusion Include="@(_ServiceWorkerIntermediateFile->'%(FullPath)')" />
 
-      <_BlazorOutputWithTargetPath Include="@(_ServiceWorkerIntermediateFile->'%(FullPath)')" />
       <_ServiceWorkerStaticWebAsset Include="@(_ServiceWorkerIntermediateFile->'%(FullPath)')">
         <SourceType></SourceType>
         <SourceId>$(PackageId)</SourceId>
         <ContentRoot>$([MSBuild]::NormalizeDirectory('$(TargetDir)wwwroot\'))</ContentRoot>
         <BasePath>$(StaticWebAssetBasePath)</BasePath>
-        <RelativePath>$([MSBuild]::MakeRelative($([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/$(_BlazorIntermediateOutputPath)')), $(_ServiceWorkerAssetsManifestFullPath)))</RelativePath>
+        <RelativePath>%(TargetOutputPath)</RelativePath>
       </_ServiceWorkerStaticWebAsset>
 
       <StaticWebAsset Include="@(_ServiceWorkerStaticWebAsset)" />

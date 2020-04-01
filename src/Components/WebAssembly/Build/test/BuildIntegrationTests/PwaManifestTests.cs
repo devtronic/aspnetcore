@@ -41,5 +41,21 @@ namespace Microsoft.AspNetCore.Components.WebAssembly.Build
             var entries = assets.EnumerateArray().Select(e => e.GetProperty("url").GetString()).OrderBy(e => e).ToArray();
             Assert.All(entries, e => expectedExtensions.Contains(Path.GetExtension(e)));
         }
+
+        [Fact]
+        public async Task Publish_ServiceWorker_Works()
+        {
+            // Arrange
+            using var project = ProjectDirectory.Create("standalone", additionalProjects: new[] { "razorclasslibrary" });
+            var result = await MSBuildProcessManager.DotnetMSBuild(project, target: "Publish", args: "/p:ServiceWorkerAssetsManifest=service-worker-assets.js");
+
+            Assert.BuildPassed(result);
+
+            var publishOutputDirectory = project.PublishOutputDirectory;
+
+            var serviceWorker = Assert.FileExists(result, publishOutputDirectory, "wwwroot", "service-worker.js");
+            Assert.FileContains(result, serviceWorker, "// Publish");
+            Assert.FileDoesNotExist(result, publishOutputDirectory, "wwwroot", "service-worker.published.js");
+        }
     }
 }
