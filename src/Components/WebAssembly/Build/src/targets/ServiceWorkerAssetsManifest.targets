@@ -54,7 +54,7 @@
 
   <Target Name="_ComputeServiceWorkerAssetsManifestFileHashes"
     Condition="'$(ServiceWorkerAssetsManifest)' != ''"
-    DependsOnTargets="ResolveStaticWebAssetsInputs">
+    DependsOnTargets="ResolveStaticWebAssetsInputs;_BlazorComputeOtherAssetsIntegrity">
 
     <ItemGroup>
       <ServiceWorkerAssetsManifestItem
@@ -81,6 +81,25 @@
 
     </ItemGroup>
   </Target>
+
+  <Target Name="_BlazorComputeOtherAssetsIntegrity" Condition="'$(ServiceWorkerAssetsManifest)' != ''">
+    <ItemGroup>
+      <_StaticWebAssetsWithoutHash Include="@(StaticWebAsset)" Condition="'%(SourceType)' != '' or '%(ContentRoot)' == '$(_BlazorCurrentProjectWWWroot)'" />
+      <_StaticWebAssetsWithoutHash Remove="@(_StaticWebAssetIntegrity)" />
+    </ItemGroup>
+
+    <GetFileHash Files="@(_StaticWebAssetsWithoutHash)" Algorithm="SHA256" HashEncoding="base64">
+      <Output TaskParameter="Items" ItemName="_StaticWebAssetHash" />
+    </GetFileHash>
+
+    <ItemGroup>
+      <_StaticWebAssetIntegrity Include="%(_StaticWebAssetHash.Identity)">
+        <Integrity>%(_StaticWebAssetHash.FileHash)</Integrity>
+      </_StaticWebAssetIntegrity>
+    </ItemGroup>
+
+  </Target>
+
 
   <!--
     Compute a default ServiceWorkerAssetsManifestVersion value by combining all the asset hashes.

@@ -1,5 +1,9 @@
 <Project>
 
+  <PropertyGroup>
+    <_BlazorCurrentProjectWWWroot>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)\wwwroot\'))</_BlazorCurrentProjectWWWroot>
+  </PropertyGroup>
+
   <Target Name="_ResolveBlazorGeneratedAssets" DependsOnTargets="_PrepareBlazorOutputs">
     <ItemGroup>
       <_BlazorOutputCandidateAsset Include="@(_BlazorOutputWithTargetPath->'%(FullPath)')">
@@ -41,32 +45,10 @@
 
   </Target>
 
-  <Target Name="_BlazorComputeWebRootIntegrity" Condition="'$(ServiceWorkerAssetsManifest)' != ''">
-    <ItemGroup>
-      <_StaticWebAssetsWithoutHash Include="@(StaticWebAsset)" />
-      <_StaticWebAssetsWithoutHash Remove="@(_StaticWebAssetIntegrity)" />
-    </ItemGroup>
-
-    <GetFileHash Files="@(_StaticWebAssetsWithoutHash)" Algorithm="SHA256" HashEncoding="base64">
-      <Output TaskParameter="Items" ItemName="_StaticWebAssetHash" />
-    </GetFileHash>
-
-    <ItemGroup>
-      <_StaticWebAssetIntegrity Include="%(_StaticWebAssetHash.Identity)">
-        <Integrity>%(FileHash)</Integrity>
-      </_StaticWebAssetIntegrity>
-    </ItemGroup>
-
-  </Target>
-
   <Target Name="_BlazorStaticWebAssetsCopyGeneratedFilesToOutputDirectory"
     DependsOnTargets="ResolveStaticWebAssetsInputs;$(_BlazorCopyFilesToOutputDirectoryDependsOn)"
     AfterTargets="CopyFilesToOutputDirectory"
     Condition="'$(OutputType.ToLowerInvariant())'=='exe'">
-
-    <PropertyGroup>
-      <_BlazorCurrentProjectWWWroot>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)\wwwroot\'))</_BlazorCurrentProjectWWWroot>
-    </PropertyGroup>
 
     <ItemGroup>
       <_BlazorCopyLocalAssets
