@@ -38,8 +38,8 @@
     Condition="'$(ServiceWorkerAssetsManifest)' != ''"
     Inputs="@(ServiceWorkerAssetsManifestItem)"
     Outputs="$(_ServiceWorkerAssetsManifestIntermediateOutputPath)"
-    BeforeTargets="_BlazorStaticWebAssetsCopyGeneratedFilesToOutputDirectory;_GzipCompressBlazorApplicationFiles"
-    DependsOnTargets="_GenerateServiceWorkerIntermediateFiles">
+    BeforeTargets="_ComputeManifestIntegrity"
+    DependsOnTargets="ResolveStaticWebAssetsInputs;_GenerateServiceWorkerIntermediateFiles">
 
     <GenerateServiceWorkerAssetsManifest
       Version="$(ServiceWorkerAssetsManifestVersion)"
@@ -48,6 +48,42 @@
 
     <ItemGroup>
       <FileWrites Include="$(_ServiceWorkerAssetsManifestIntermediateOutputPath)" />
+    </ItemGroup>
+
+  </Target>
+
+  <Target Name="_ComputeManifestIntegrity"
+    Condition="'$(ServiceWorkerAssetsManifest)' != ''"
+    BeforeTargets="_BlazorStaticWebAssetsCopyGeneratedFilesToOutputDirectory;_GzipCompressBlazorApplicationFiles">
+    
+    <GetFileHash Files="$(_ServiceWorkerAssetsManifestIntermediateOutputPath)" Algorithm="SHA256" HashEncoding="base64">
+      <Output TaskParameter="Items" ItemName="_ServiceWorkerManifestWithHash" />
+    </GetFileHash>
+
+    <ItemGroup>
+
+      <_ServiceWorkerManifestWithIntegrity Include="@(_ServiceWorkerManifestWithHash)">
+        <Integrity>%(FileHash)</Integrity>
+        <IntegrityFile>$(IntermediateOutputPath)integrity\$([System.String]::Copy('%(FileHash)').Replace('/','-').Replace('+','_')).hash'</IntegrityFile>
+      </_ServiceWorkerManifestWithIntegrity>
+
+      <FileWrites Include="%(_ServiceWorkerManifestWithIntegrity.IntegrityFile)" />
+
+    </ItemGroup>
+
+    <WriteLinesToFile Lines="%(_ServiceWorkerManifestWithIntegrity.Integrity)" File="%(_ServiceWorkerManifestWithIntegrity.IntegrityFile)" WriteOnlyWhenDifferent="true" Overwrite="true" />
+
+    <PropertyGroup>
+      <_ServiceWorkerManifestIntegrityFile>$(IntermediateOutputPath)integrity\$([System.String]::Copy('%(_ServiceWorkerManifestWithIntegrity.FileHash)').Replace('/','-').Replace('+','_')).hash'</_ServiceWorkerManifestIntegrityFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_GzipFileToPatch Include="@(_GzipBlazorFileToCompress)" Condition="'%(Identity)' == '$(_ServiceWorkerAssetsManifestFullPath)'" KeepDuplicates="false">
+        <InputSource>$(_ServiceWorkerManifestIntegrityFile)</InputSource>
+      </_GzipFileToPatch>
+
+      <_GzipBlazorFileToCompress Remove="@(_GzipFileToPatch)" />
+      <_GzipBlazorFileToCompress Include="@(_GzipFileToPatch)" />
     </ItemGroup>
 
   </Target>

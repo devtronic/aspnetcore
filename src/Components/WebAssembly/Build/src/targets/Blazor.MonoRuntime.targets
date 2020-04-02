@@ -144,24 +144,31 @@
     <ItemGroup Condition="'$(BlazorEnableDebugging)' != 'true'">
       <_BlazorOutputWithTargetPath Remove="@(_BlazorOutputWithTargetPath)" Condition="'%(Extension)' == '.pdb'" />
     </ItemGroup>
-    <GetFileHash Files="@(_BlazorOutputWithTargetPath)" Condition="Exists(%(Identity))" Algorithm="SHA256" HashEncoding="base64">
+
+    <ItemGroup>
+      <_ExistingBlazorOutputWithTargetPath Include="@(_BlazorOutputWithTargetPath)" Condition="Exists('%(FullPath)')" /> 
+    </ItemGroup>
+    
+    <GetFileHash Files="@(_ExistingBlazorOutputWithTargetPath)" Algorithm="SHA256" HashEncoding="base64">
       <Output TaskParameter="Items" ItemName="_BlazorOutputWithHash" />
     </GetFileHash>
 
     <ItemGroup>
-      <_BlazorOutputWithHash>
+      <_BlazorOutputWithIntegrity Include="@(_BlazorOutputWithHash)">
         <Integrity>%(_BlazorOutputWithHash.FileHash)</Integrity>
         <IntegrityFile>$(IntermediateOutputPath)integrity\$([System.String]::Copy('%(FileHash)').Replace('/','-').Replace('+','_')).hash'</IntegrityFile>
-      </_BlazorOutputWithHash>
+      </_BlazorOutputWithIntegrity>
 
-      <_BlazorOutputWithTargetPath Remove="@(_BlazorOutputWithHash)" />
-      <_BlazorOutputWithTargetPath Include="@(_BlazorOutputWithHash)" RemoveMetadata="FileHash;FileHashAlgorithm" />
+      <_BlazorOutputWithTargetPath Remove="@(_BlazorOutputWithIntegrity)" />
+      <_BlazorOutputWithTargetPath Include="@(_BlazorOutputWithIntegrity)" RemoveMetadata="FileHash;FileHashAlgorithm" />
 
       <MakeDir Directories="$(IntermediateOutputPath)integrity" />
+    </ItemGroup>
 
-      <WriteLinesToFile Lines="%(_BlazorOutputWithTargetPath.Integrity)" File="%(_BlazorOutputWithTargetPath.IntegrityFile)" WriteOnlyWhenDifferent="true" Overwrite="true" />
+    <WriteLinesToFile Lines="%(_BlazorOutputWithIntegrity.Integrity)" File="%(_BlazorOutputWithIntegrity.IntegrityFile)" WriteOnlyWhenDifferent="true" Overwrite="true" />
 
-      <FileWrites Include="%(_BlazorOutputWithTargetPath.IntegrityFile)" />
+    <ItemGroup>
+      <FileWrites Include="%(_BlazorOutputWithIntegrity.IntegrityFile)" />
     </ItemGroup>
 
   </Target>

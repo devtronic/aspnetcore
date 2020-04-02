@@ -62,7 +62,7 @@
 
   <Target
     Name="_GzipCompressBlazorApplicationFiles"
-    DependsOnTargets="_ResolveBlazorFilesToCompress"
+    DependsOnTargets="ResolveStaticWebAssetsInputs"
     BeforeTargets="_BlazorStaticWebAssetsCopyGeneratedFilesToOutputDirectory"
     Inputs="%(_GzipBlazorFileToCompress.InputSource)"
     Outputs="%(_GzipBlazorFileToCompress.TargetCompressionPath)">
