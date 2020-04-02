@@ -38,7 +38,7 @@
     Condition="'$(ServiceWorkerAssetsManifest)' != ''"
     Inputs="@(ServiceWorkerAssetsManifestItem)"
     Outputs="$(_ServiceWorkerAssetsManifestIntermediateOutputPath)"
-    BeforeTargets="_BlazorStaticWebAssetsCopyGeneratedFilesToOutputDirectory;_GzipCompressBlazorApplicationFiles;_BrotliCompressBlazorApplicationFiles"
+    BeforeTargets="_BlazorStaticWebAssetsCopyGeneratedFilesToOutputDirectory;_GzipCompressBlazorApplicationFiles"
     DependsOnTargets="_GenerateServiceWorkerIntermediateFiles">
 
     <GenerateServiceWorkerAssetsManifest

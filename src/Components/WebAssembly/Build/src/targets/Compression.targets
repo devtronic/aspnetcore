@@ -74,7 +74,7 @@
   <Target
     Name="_BrotliCompressBlazorApplicationFiles"
     BeforeTargets="GetCopyToPublishDirectoryItems;_CopyResolvedFilesToPublishPreserveNewest"
-    DependsOnTargets="_ResolveBlazorFilesToCompress"
+    DependsOnTargets="ResolveStaticWebAssetsInputs"
     Inputs="%(_BrotliBlazorFileToCompress.InputSource)"
     Outputs="%(_BrotliBlazorFileToCompress.TargetCompressionPath)">
 
