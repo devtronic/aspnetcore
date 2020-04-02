@@ -84,6 +84,13 @@
 
       <_GzipBlazorFileToCompress Remove="@(_GzipFileToPatch)" />
       <_GzipBlazorFileToCompress Include="@(_GzipFileToPatch)" />
+
+      <_BrotliFileToPatch Include="@(_BrotliBlazorFileToCompress)" Condition="'%(Identity)' == '$(_ServiceWorkerAssetsManifestFullPath)'" KeepDuplicates="false">
+        <InputSource>$(_ServiceWorkerManifestIntegrityFile)</InputSource>
+      </_BrotliFileToPatch>
+
+      <_BrotliBlazorFileToCompress Remove="@(_BrotliFileToPatch)" />
+      <_BrotliBlazorFileToCompress Include="@(_BrotliFileToPatch)" />
     </ItemGroup>
 
   </Target>
