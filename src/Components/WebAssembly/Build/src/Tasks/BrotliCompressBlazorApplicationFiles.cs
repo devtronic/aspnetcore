@@ -14,7 +14,7 @@ namespace Microsoft.AspNetCore.Components.WebAssembly.Build
         private const string DotNetHostPathEnvironmentName = "DOTNET_HOST_PATH";
 
         [Required]
-        public ITaskItem StaticWebAsset { get; set; }
+        public string ManifestPath { get; set; }
 
         [Required]
         public string BlazorBrotliPath { get; set; }
@@ -48,15 +48,10 @@ namespace Microsoft.AspNetCore.Components.WebAssembly.Build
 
         protected override string GenerateCommandLineCommands()
         {
-            var targetCompressionPath = StaticWebAsset.GetMetadata("TargetCompressionPath");
-            var sourcePath = StaticWebAsset.GetMetadata("FullPath");
-
             var args = new StringBuilder();
             args.Append(BlazorBrotliPath);
             args.Append(' ');
-            args.Append(Quote(sourcePath));
-            args.Append(' ');
-            args.Append(Quote(targetCompressionPath));
+            args.Append(Quote(ManifestPath));
 
             return args.ToString();
         }

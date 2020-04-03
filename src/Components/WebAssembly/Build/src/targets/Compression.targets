@@ -2,7 +2,6 @@
   <PropertyGroup>
 
     <_BlazorBrotliPath>$(_BlazorToolsDir)compression\blazor-brotli.dll</_BlazorBrotliPath>
-
     <ResolveCurrentProjectStaticWebAssetsDependsOn>
       $(ResolveCurrentProjectStaticWebAssetsDependsOn);
       _ResolveBlazorFilesToCompress;
@@ -14,6 +13,8 @@
 
     <PropertyGroup>
       <_BlazorFilesIntermediateOutputPath>$(IntermediateOutputPath)compressed\</_BlazorFilesIntermediateOutputPath>
+      <_GzipCompressionBlazorApplicationFilesManifestPath>$(IntermediateOutputPath)compressed\gzip.manifest.json</_GzipCompressionBlazorApplicationFilesManifestPath>
+      <_BrotliCompressionBlazorApplicationFilesManifestPath>$(IntermediateOutputPath)compressed\brotli.manifest.json</_BrotliCompressionBlazorApplicationFilesManifestPath>
     </PropertyGroup>
 
     <MakeDir Directories="$(_BlazorFilesIntermediateOutputPath)" />
@@ -59,30 +60,49 @@
 
   <UsingTask TaskName="GzipCompressBlazorApplicationFiles" AssemblyFile="$(_BlazorTasksPath)" />
   <UsingTask TaskName="BrotliCompressBlazorApplicationFiles" AssemblyFile="$(_BlazorTasksPath)" />
-
+  <UsingTask TaskName="GenerateBlazorCompressionManifest" AssemblyFile="$(_BlazorTasksPath)" />
+  
   <Target
     Name="_GzipCompressBlazorApplicationFiles"
     DependsOnTargets="ResolveStaticWebAssetsInputs"
     BeforeTargets="_BlazorStaticWebAssetsCopyGeneratedFilesToOutputDirectory"
-    Inputs="%(_GzipBlazorFileToCompress.InputSource)"
-    Outputs="%(_GzipBlazorFileToCompress.TargetCompressionPath)">
+    Inputs="$(_GzipCompressionBlazorApplicationFilesManifestPath)"
+    Outputs="@(_GzipBlazorFileToCompress->'%(TargetCompressionPath)')">
 
-    <GzipCompressBlazorApplicationFiles StaticWebAsset="@(_GzipBlazorFileToCompress)" />
+    <GzipCompressBlazorApplicationFiles ManifestPath="$(_GzipCompressionBlazorApplicationFilesManifestPath)" />
 
+  </Target>
+
+  <Target
+    Name="_GenerateGzipCompressionBlazorApplicationFilesManifest"
+    BeforeTargets="_GzipCompressBlazorApplicationFiles"
+    Inputs="@(_GzipBlazorFileToCompress->'%(InputSource)')"
+    Outputs="$(_GzipCompressionBlazorApplicationFilesManifestPath)">
+
+    <GenerateBlazorCompressionManifest FilesToCompress="@(_GzipBlazorFileToCompress)" ManifestPath="$(_GzipCompressionBlazorApplicationFilesManifestPath)" />
   </Target>
 
   <Target
     Name="_BrotliCompressBlazorApplicationFiles"
     BeforeTargets="GetCopyToPublishDirectoryItems;_CopyResolvedFilesToPublishPreserveNewest"
     DependsOnTargets="ResolveStaticWebAssetsInputs"
-    Inputs="%(_BrotliBlazorFileToCompress.InputSource)"
-    Outputs="%(_BrotliBlazorFileToCompress.TargetCompressionPath)">
+    Inputs="$(_BrotliCompressionBlazorApplicationFilesManifestPath)"
+    Outputs="@(_BrotliBlazorFileToCompress->'%(TargetCompressionPath)')">
 
     <BrotliCompressBlazorApplicationFiles
-    BlazorBrotliPath="$(_BlazorBrotliPath)"
-    StaticWebAsset="@(_BrotliBlazorFileToCompress)"
-    ToolExe="$(_DotNetHostFileName)"
-    ToolPath="$(_DotNetHostDirectory)" />
+      BlazorBrotliPath="$(_BlazorBrotliPath)"
+      ManifestPath="$(_BrotliCompressionBlazorApplicationFilesManifestPath)"
+      ToolExe="$(_DotNetHostFileName)"
+      ToolPath="$(_DotNetHostDirectory)" />
+  </Target>
+
+  <Target
+    Name="_GenerateBrotliCompressionBlazorApplicationFilesManifest"
+    BeforeTargets="_GzipCompressBlazorApplicationFiles"
+    Inputs="@(_BrotliBlazorFileToCompress->'%(InputSource)')"
+    Outputs="$(_BrotliCompressionBlazorApplicationFilesManifestPath)">
+
+    <GenerateBlazorCompressionManifest FilesToCompress="@(_BrotliBlazorFileToCompress)" ManifestPath="$(_BrotliCompressionBlazorApplicationFilesManifestPath)" />
   </Target>
 
 </Project>
